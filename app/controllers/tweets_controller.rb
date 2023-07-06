@@ -1,7 +1,7 @@
 class TweetsController < ApplicationController
 
   def index 
-    @tweets = Tweet.all
+    @tweets = Tweet.all.order(created_at: :desc)
     render 'tweets/index'
   end 
 
@@ -23,8 +23,27 @@ class TweetsController < ApplicationController
     end 
   end
 
-  # need to make the jbuilder create template. That is where I left off.
+  def destroy
+    token = cookies.signed[:twitter_session_token]
+    session = Session.find_by(token: token)
 
+    if session 
+      user = session.user
+      @tweet = Tweet.find_by(id: params[:id])
+
+      if @tweet&.destroy
+        render json: { success: true }
+      end 
+    else
+      render json: { success: false }
+    end 
+  end 
+
+  def index_by_user
+    user = User.find_by(username: params[:username])
+    @tweets = user.tweets
+    render 'tweets/index' 
+  end 
 
   private 
 
